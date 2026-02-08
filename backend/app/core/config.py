@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Elevate API"
     API_V1_STR: str = "/api/v1"
     
+    # CORS
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:5173", "https://elevate-frontend-3ts5.onrender.com"]
+
     POSTGRES_SERVER: str
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
