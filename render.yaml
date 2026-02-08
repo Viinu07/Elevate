@@ -6,13 +6,13 @@ services:
     rootDir: backend
     envVars:
       - key: POSTGRES_SERVER
-        sync: false
+        sync: db.acyfqskpaccqpuvqtqez.supabase.co
       - key: POSTGRES_USER
-        sync: false
+        sync: postgres
       - key: POSTGRES_PASSWORD
-        sync: false
+        sync: Sirisha@1408
       - key: POSTGRES_DB
-        sync: false
+        sync: postgres
       - key: POSTGRES_PORT
         value: 5432
       - key: PORT
