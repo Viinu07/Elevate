@@ -13,6 +13,9 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    allowedHosts: true,
+  },
   plugins: [react()],
   resolve: {
     alias: {
