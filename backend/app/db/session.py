@@ -8,6 +8,7 @@ engine = create_async_engine(
     pool_size=settings.POSTGRES_POOL_SIZE,
     max_overflow=settings.POSTGRES_MAX_OVERFLOW,
     echo=False,
+    connect_args={"statement_cache_size": 0}
 )
 
 AsyncSessionLocal = async_sessionmaker(
