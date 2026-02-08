@@ -30,5 +30,5 @@ services:
         fromService:
           type: web
           name: elevate-backend
-          property: url
+          property: host
     plan: free
