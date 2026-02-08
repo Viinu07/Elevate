@@ -6,13 +6,13 @@ services:
     rootDir: backend
     envVars:
       - key: POSTGRES_SERVER
-        sync: false
+        sync: false # Render will ask for this value securely
       - key: POSTGRES_USER
-        sync: false
+        sync: false # Render will ask for this value securely
       - key: POSTGRES_PASSWORD
-        sync: false
+        sync: false # Render will ask for this value securely
       - key: POSTGRES_DB
-        sync: false
+        sync: false # Render will ask for this value securely
       - key: POSTGRES_PORT
         value: 5432
       - key: PORT

@@ -1,5 +1,19 @@
 
-const BASE_URL = '/api/v1';
+const getBaseUrl = () => {
+    // In production (Render), VITE_API_URL might be provided by the backend service link
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (apiUrl) {
+        // If it's just a hostname (from Render 'host' property), add https://
+        if (!apiUrl.startsWith('http')) {
+            return `https://${apiUrl}/api/v1`;
+        }
+        return `${apiUrl}/api/v1`;
+    }
+    // Default for local development (uses Vite proxy)
+    return '/api/v1';
+};
+
+const BASE_URL = getBaseUrl();
 
 interface FetchOptions extends RequestInit {
     params?: Record<string, string | number>;
