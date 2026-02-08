@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # CORS
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:5173", "https://elevate-frontend-3ts5.onrender.com"]
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:5173", "https://elevate-frontend-3ts5.onrender.com", "https://elevate-frontend.fly.dev"]
 
     POSTGRES_SERVER: str
     POSTGRES_USER: str
