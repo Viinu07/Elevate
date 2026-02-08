@@ -11,16 +11,12 @@ class UserBase(BaseModel):
     name: Optional[str] = None
     role: Optional[str] = None
     team_id: Optional[str] = None
-    # Flat API fields (Computed)
-    team_name: Optional[str] = None
-    art_id: Optional[str] = None
-    art_name: Optional[str] = None
 
 # Properties to receive on creation
 class UserCreate(UserBase):
     name: str
     role: Optional[str] = None
-    id: Optional[str] = None # We might allow setting ID manually to match frontend mock or generate it
+    id: Optional[str] = None
 
 # Properties to receive on update
 class UserUpdate(UserBase):
@@ -32,6 +28,13 @@ class UserInDBBase(UserBase):
     
     model_config = ConfigDict(from_attributes=True)
 
-# Properties to return to client
-class User(UserInDBBase):
+# Minimal User schema for embedding in Team
+class UserInTeam(UserInDBBase):
     pass
+
+# Properties to return to client (Full User)
+class User(UserInDBBase):
+    # Flat API fields (Computed) - Only included in full User response
+    team_name: Optional[str] = None
+    art_id: Optional[str] = None
+    art_name: Optional[str] = None
