@@ -33,9 +33,9 @@ export interface ReleaseWorkItem {
 export type CreateReleaseWorkItem = Omit<ReleaseWorkItem, 'id'> & { id?: number };
 
 export const releaseService = {
-    getAll: () => api.get<ReleaseWorkItem[]>('/releases'),
+    getAll: () => api.get<ReleaseWorkItem[]>('/releases/'),
 
-    create: (data: CreateReleaseWorkItem) => api.post<ReleaseWorkItem>('/releases', data),
+    create: (data: CreateReleaseWorkItem) => api.post<ReleaseWorkItem>('/releases/', data),
 
     update: (id: number, data: Partial<ReleaseWorkItem>) => api.put<ReleaseWorkItem>(`/releases/${id}`, data),
 
