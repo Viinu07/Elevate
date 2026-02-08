@@ -39,7 +39,7 @@ import { FantasySpinner } from '../../shared/components/FantasySpinner';
 
 export default function TeamsPage() {
     const dispatch = useDispatch<AppDispatch>();
-    const { arts, teams, isLoading } = useSelector((state: RootState) => state.teams);
+    const { arts, isLoading } = useSelector((state: RootState) => state.teams);
 
     useEffect(() => {
         dispatch(fetchARTs());

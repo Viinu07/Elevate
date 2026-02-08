@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../store';
 import { selectTop3ByAward } from '../../store/awardsSelectors';
-import { fetchCollabData } from '../../store/collabSlice';
+import { fetchAwards, fetchVotingResults, fetchVotingStatus } from '../../store/collabSlice';
 
 export default function AwardsLeaderboard() {
     const dispatch = useDispatch<AppDispatch>();
@@ -10,7 +10,9 @@ export default function AwardsLeaderboard() {
     const { activeVoting: votingPeriod, categories } = useSelector((state: RootState) => state.collab.awards);
 
     useEffect(() => {
-        dispatch(fetchCollabData());
+        dispatch(fetchAwards());
+        dispatch(fetchVotingResults());
+        dispatch(fetchVotingStatus());
     }, [dispatch]);
 
     return (

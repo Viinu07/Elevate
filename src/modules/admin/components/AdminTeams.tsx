@@ -13,8 +13,7 @@ import {
     removeMember
 } from '../../../store/teamsSlice';
 import {
-    Users, Plus, Trash2, Edit2, ChevronRight, Search,
-    Filter, MoreVertical, X, Check, UserPlus
+    Users, Plus, Trash2, Edit2, X, Check, UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmationDialog } from '../../../shared/components/ConfirmationDialog';

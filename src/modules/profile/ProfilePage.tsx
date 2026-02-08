@@ -7,12 +7,12 @@ import { Award } from 'lucide-react';
 
 // --- Mock Data ---
 // --- Constants ---
-const VIBE_TAGS = [
-    { label: '🚀 Accelerator', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-700' },
-    { label: '💡 Innovator', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-700' },
-    { label: '✨ Detail Oriented', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-700' },
-    { label: '🎸 Rock Star', color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-700' },
-];
+// const VIBE_TAGS = [
+//     { label: '🚀 Accelerator', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-700' },
+//     { label: '💡 Innovator', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-700' },
+//     { label: '✨ Detail Oriented', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-700' },
+//     { label: '🎸 Rock Star', color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-700' },
+// ];
 
 export default function ProfilePage() {
     const dispatch = useDispatch<AppDispatch>();
