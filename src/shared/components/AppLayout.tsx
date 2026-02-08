@@ -1,5 +1,8 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState, AppDispatch } from '@/store';
+import { fetchCurrentUser } from '@/store/userSlice';
 
 const SidebarItem = ({ to, label, icon }: { to: string, label: string, icon?: React.ReactNode }) => {
     const location = useLocation();
@@ -12,7 +15,7 @@ const SidebarItem = ({ to, label, icon }: { to: string, label: string, icon?: Re
                 className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${isActive
                     ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20 dark:bg-white dark:text-slate-900 dark:shadow-white/10 scale-110'
                     : 'bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-900 hover:scale-105 shadow-sm shadow-slate-200/50 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200 dark:shadow-none'
-                    }`}
+                    } `}
             >
                 {icon}
             </Link>
@@ -27,6 +30,12 @@ const SidebarItem = ({ to, label, icon }: { to: string, label: string, icon?: Re
 
 export function AppLayout() {
     const [isDark, setIsDark] = useState(false);
+    const dispatch = useDispatch<AppDispatch>();
+    const currentUser = useSelector((state: RootState) => state.user.data);
+
+    useEffect(() => {
+        dispatch(fetchCurrentUser());
+    }, [dispatch]);
 
     useEffect(() => {
         if (isDark) {
@@ -37,7 +46,7 @@ export function AppLayout() {
     }, [isDark]);
 
     return (
-        <div className={`flex h-screen bg-[#f8f9fa] dark:bg-[#0a0a0c] transition-colors duration-500`}>
+        <div className="flex h-screen bg-[#f8f9fa] dark:bg-[#0a0a0c] transition-colors duration-500">
             {/* Floating Sidebar - No background, just icons */}
             <aside className="fixed left-6 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-8 items-center py-6">
                 {/* Brand Icon */}
@@ -101,7 +110,7 @@ export function AppLayout() {
                     </button>
 
                     <Link to="/profile" className="w-10 h-10 bg-slate-200 rounded-full ring-2 ring-white dark:ring-slate-700 overflow-hidden cursor-pointer hover:ring-blue-400 transition-all">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Viinu" alt="Profile" className="w-full h-full" />
+                        <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser?.name || 'Viinu'}&backgroundColor=b6e3f4`} alt="Profile" className="w-full h-full" />
                     </Link>
                 </div>
             </aside>

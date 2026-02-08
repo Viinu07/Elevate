@@ -1,12 +1,7 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { userService, type User } from '@/api/userService';
 
-export interface UserProfile {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    avatarUrl?: string;
-}
+export interface UserProfile extends User { }
 
 interface UserState {
     data: UserProfile | null;
@@ -16,35 +11,48 @@ interface UserState {
 }
 
 const initialState: UserState = {
-    data: {
-        id: 'u-1',
-        name: 'Viinu',
-        email: 'viinu@elevate.com',
-        role: 'Admin',
-        avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Viinu'
-    },
-    isAuthenticated: true,
+    data: null,
+    isAuthenticated: false,
     isLoading: false,
     error: null,
 };
+
+export const fetchCurrentUser = createAsyncThunk(
+    'user/fetchCurrent',
+    async () => {
+        const user = await userService.getCurrentUser();
+        return user;
+    }
+);
 
 const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        login: (state) => {
-            state.isAuthenticated = true;
-        },
         logout: (state) => {
+            state.data = null;
             state.isAuthenticated = false;
         },
-        updateProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
-            if (state.data) {
-                state.data = { ...state.data, ...action.payload };
-            }
-        }
-    }
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchCurrentUser.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(fetchCurrentUser.fulfilled, (state, action: PayloadAction<UserProfile | null>) => {
+                state.isLoading = false;
+                if (action.payload) {
+                    state.data = action.payload;
+                    state.isAuthenticated = true;
+                }
+            })
+            .addCase(fetchCurrentUser.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.error.message || 'Failed to fetch user';
+            });
+    },
 });
 
-export const { login, logout, updateProfile } = userSlice.actions;
+export const { logout } = userSlice.actions;
 export default userSlice.reducer;

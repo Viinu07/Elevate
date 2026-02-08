@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { releaseService, type ReleaseWorkItem } from '../../api/releaseService';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check } from 'lucide-react';
 
 // --- Types ---
 interface TestingGate {
@@ -9,8 +12,8 @@ interface TestingGate {
 interface WorkItem {
     id: number;
     title: string;
-    team: string; // e.g., 'Olympus'
-    release: string; // e.g., 'v2.4.0'
+    team: string; // UI uses 'team', backend uses 'team_name'
+    release: string; // UI uses 'release', backend uses 'release_version'
     unitTesting: TestingGate;
     systemTesting: TestingGate;
     intTesting: TestingGate;
@@ -21,30 +24,49 @@ interface WorkItem {
     cscaIntake: 'Yes' | 'No';
 }
 
-// --- Mock Data ---
+// --- Data Mappers ---
+const mapApiToUi = (item: ReleaseWorkItem): WorkItem => ({
+    id: item.id,
+    title: item.title,
+    team: item.team_name,
+    release: item.release_version,
+    unitTesting: { checked: item.unit_testing_checked, date: item.unit_testing_date || '' },
+    systemTesting: { checked: item.system_testing_checked, date: item.system_testing_date || '' },
+    intTesting: { checked: item.int_testing_checked, date: item.int_testing_date || '' },
+    pvsTesting: item.pvs_testing,
+    pvsIntakeNumber: item.pvs_intake_number || '',
+    warrantyCallNeeded: item.warranty_call_needed,
+    confluenceUpdated: item.confluence_updated,
+    cscaIntake: item.csca_intake as 'Yes' | 'No'
+});
+
+const mapUiToApi = (item: WorkItem): Omit<ReleaseWorkItem, 'id'> & { id?: number } => ({
+    // id field is optional for create
+    title: item.title,
+    team_name: item.team,
+    release_version: item.release,
+    unit_testing_checked: item.unitTesting.checked,
+    unit_testing_date: item.unitTesting.date || null,
+    system_testing_checked: item.systemTesting.checked,
+    system_testing_date: item.systemTesting.date || null,
+    int_testing_checked: item.intTesting.checked,
+    int_testing_date: item.intTesting.date || null,
+    pvs_testing: item.pvsTesting,
+    pvs_intake_number: item.pvsIntakeNumber || null,
+    warranty_call_needed: item.warrantyCallNeeded,
+    confluence_updated: item.confluenceUpdated,
+    csca_intake: item.cscaIntake
+});
+
+// --- Mock Data Constants (Available for dropdowns) ---
 const TEAMS = ['Olympus', 'App Builder', 'Seeing Eye', 'Data Movers', 'Interstellars', 'Skynet'];
 const RELEASES = ['v2.4.0', 'v2.5.0-beta', 'v3.0.0'];
 
-const INITIAL_ITEMS: WorkItem[] = [
-    {
-        id: 101,
-        title: 'Cloud Scaling Logic',
-        team: 'Olympus',
-        release: 'v2.4.0',
-        unitTesting: { checked: true, date: '2026-10-01' },
-        systemTesting: { checked: true, date: '2026-10-15' },
-        intTesting: { checked: false, date: '' },
-        pvsTesting: true,
-        pvsIntakeNumber: 'PVS-8821',
-        warrantyCallNeeded: false,
-        confluenceUpdated: true,
-        cscaIntake: 'Yes'
-    }
-];
-
 export default function ReleasesPage() {
     const [view, setView] = useState<'tracker' | 'planner'>('tracker');
-    const [workItems, setWorkItems] = useState<WorkItem[]>(INITIAL_ITEMS);
+    const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState<Partial<WorkItem>>({
@@ -60,15 +82,68 @@ export default function ReleasesPage() {
         cscaIntake: 'No'
     });
 
-    const handleCreateItem = () => {
-        const newItem: WorkItem = {
-            ...formData as WorkItem,
-            id: Date.now(),
-            title: formData.title || 'Untitled Work Item'
-        };
-        setWorkItems([...workItems, newItem]);
-        setView('tracker'); // Switch back to tracker to see result
-        alert('Work Item Created!');
+    useEffect(() => {
+        loadItems();
+    }, []);
+
+    const loadItems = async () => {
+        try {
+            setIsLoading(true);
+            const data = await releaseService.getAll();
+            setWorkItems(data.map(mapApiToUi));
+        } catch (error) {
+            console.error('Failed to load releases:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (isLoading && workItems.length === 0) {
+        return <div className="p-8 flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>;
+    }
+
+    const handleCreateItem = async () => {
+        if (!formData.title) {
+            alert('Please enter a title');
+            return;
+        }
+
+        try {
+            const tempId = Date.now(); // Generate ID for API if needed, or backend ignores it
+            const newItemUi: WorkItem = {
+                ...formData as WorkItem,
+                id: tempId,
+                title: formData.title || 'Untitled Work Item'
+            };
+
+            const apiPayload = { ...mapUiToApi(newItemUi), id: tempId };
+
+            await releaseService.create(apiPayload);
+
+            // Refresh list
+            await loadItems();
+
+            setView('tracker');
+            // Reset form (optional, keeping some defaults)
+            setFormData({
+                ...formData,
+                title: '',
+                unitTesting: { checked: false, date: '' },
+                systemTesting: { checked: false, date: '' },
+                intTesting: { checked: false, date: '' },
+                pvsTesting: false,
+                pvsIntakeNumber: '',
+                warrantyCallNeeded: false,
+                confluenceUpdated: false,
+                cscaIntake: 'No'
+            });
+            setShowSuccessDialog(true);
+        } catch (error) {
+            console.error('Failed to create work item:', error);
+            alert('Failed to create work item');
+        }
     };
 
     return (
@@ -303,6 +378,42 @@ export default function ReleasesPage() {
                     })}
                 </div>
             )}
+            {/* Success Dialog */}
+            <AnimatePresence>
+                {showSuccessDialog && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+                            onClick={() => setShowSuccessDialog(false)}
+                        />
+                        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-100 dark:border-slate-700 max-w-sm w-full text-center pointer-events-auto"
+                            >
+                                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <Check className="w-10 h-10 text-green-600 dark:text-green-400" strokeWidth={3} />
+                                </div>
+                                <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Success!</h3>
+                                <p className="text-slate-500 dark:text-slate-400 mb-8">
+                                    Work item has been successfully created and added to the tracker.
+                                </p>
+                                <button
+                                    onClick={() => setShowSuccessDialog(false)}
+                                    className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:scale-[1.02] transition-transform"
+                                >
+                                    Awesome
+                                </button>
+                            </motion.div>
+                        </div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

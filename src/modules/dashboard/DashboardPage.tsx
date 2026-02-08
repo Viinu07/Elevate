@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '../../store';
 import { Particles } from '../../shared/components/Particles';
+import { fetchARTs } from '../../store/teamsSlice';
+import { fetchVotingResults } from '../../store/collabSlice';
 
 const SLIDES = [
     { id: 'welcome', title: 'Welcome to Elevate' },
@@ -16,6 +18,7 @@ const SLIDES = [
 
 export default function DashboardPage() {
     const navigate = useNavigate();
+    const dispatch = useDispatch<AppDispatch>();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
@@ -24,7 +27,22 @@ export default function DashboardPage() {
     // Get stats from Redux
     const arts = useSelector((state: RootState) => state.teams.arts);
     const votes = useSelector((state: RootState) => state.collab.awards.votes);
+    const votingResults = useSelector((state: RootState) => state.collab.voting.results);
     const teamCount = arts.flatMap(art => art.teams).length;
+
+    // Calculate total votes from voting results
+    const totalVotes = votingResults
+        ? Object.values(votingResults).reduce((total: number, category: any) => {
+            const categoryTotal = category.top_3?.reduce((sum: number, nominee: any) => sum + (nominee.vote_count || 0), 0) || 0;
+            return total + categoryTotal;
+        }, 0)
+        : votes.length;
+
+    // Fetch data on mount for real-time counts
+    useEffect(() => {
+        dispatch(fetchARTs());
+        dispatch(fetchVotingResults());
+    }, [dispatch]);
 
     // Mouse drag handlers
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -224,7 +242,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                             </div>
-                            <p className="text-2xl text-slate-700 dark:text-blue-200 mt-8 drop-shadow-sm">{votes.length} votes cast across all awards</p>
+                            <p className="text-2xl text-slate-700 dark:text-blue-200 mt-8 drop-shadow-sm">{totalVotes} votes cast across all awards</p>
                         </div>
                     )}
 

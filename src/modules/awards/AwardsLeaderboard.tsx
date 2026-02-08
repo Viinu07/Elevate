@@ -1,11 +1,17 @@
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState, AppDispatch } from '../../store';
 import { selectTop3ByAward } from '../../store/awardsSelectors';
-import { AWARD_CATEGORIES } from '../../store/collabSlice';
+import { fetchCollabData } from '../../store/collabSlice';
 
 export default function AwardsLeaderboard() {
+    const dispatch = useDispatch<AppDispatch>();
     const top3ByAward = useSelector(selectTop3ByAward);
-    const votingPeriod = useSelector((state: RootState) => state.collab.awards.activeVoting);
+    const { activeVoting: votingPeriod, categories } = useSelector((state: RootState) => state.collab.awards);
+
+    useEffect(() => {
+        dispatch(fetchCollabData());
+    }, [dispatch]);
 
     return (
         <div className="h-full w-full p-8 overflow-y-auto bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -29,7 +35,7 @@ export default function AwardsLeaderboard() {
 
             {/* Awards Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {AWARD_CATEGORIES.map(category => {
+                {categories.map(category => {
                     const top3 = top3ByAward[category.id] || [];
 
                     return (

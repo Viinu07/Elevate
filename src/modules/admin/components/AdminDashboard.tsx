@@ -1,14 +1,36 @@
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../../store';
+import { useEffect, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '../../../store';
+import { fetchARTs } from '../../../store/teamsSlice';
+import { fetchVotingResults, fetchVotingStatus } from '../../../store/collabSlice';
 
 interface AdminDashboardProps {
     setActiveSection: (section: 'teams' | 'awards') => void;
 }
 
 export const AdminDashboard = ({ setActiveSection }: AdminDashboardProps) => {
+    const dispatch = useDispatch<AppDispatch>();
     const teams = useSelector((state: RootState) => state.teams);
     const arts = teams?.arts || [];
     const votingPeriod = useSelector((state: RootState) => state.collab?.awards?.activeVoting);
+    const votingResults = useSelector((state: RootState) => state.collab.voting.results);
+
+    // Fetch teams data on mount to ensure counts are up-to-date
+    useEffect(() => {
+        dispatch(fetchARTs());
+        dispatch(fetchVotingStatus());
+        dispatch(fetchVotingResults());
+    }, [dispatch]);
+
+    // Calculate total votes across all categories
+    const totalVotes = useMemo(() => {
+        if (!votingResults) return 0;
+
+        return Object.values(votingResults).reduce((total: number, category: any) => {
+            const categoryTotal = category.top_3?.reduce((sum: number, nominee: any) => sum + (nominee.vote_count || 0), 0) || 0;
+            return total + categoryTotal;
+        }, 0);
+    }, [votingResults]);
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -75,11 +97,16 @@ export const AdminDashboard = ({ setActiveSection }: AdminDashboardProps) => {
                     </div>
 
                     <div className="relative z-10 flex items-center gap-6 mt-8">
-                        <div className={`px-4 py-2 rounded-full text-sm font-black uppercase tracking-wider ${votingPeriod?.isOpen
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`}>
-                            {votingPeriod?.isOpen ? 'Voting Open' : 'Voting Closed'}
+                        <div className="flex items-center gap-3">
+                            <div className={`px-4 py-2 rounded-full text-sm font-black uppercase tracking-wider ${votingPeriod?.isOpen
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                }`}>
+                                {votingPeriod?.isOpen ? 'Voting Open' : 'Voting Closed'}
+                            </div>
+                            <div className="px-4 py-2 rounded-full text-sm font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                {totalVotes} Total Votes
+                            </div>
                         </div>
                         <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700"></div>
                         <span className="text-amber-600 dark:text-amber-400 font-bold group-hover:translate-x-2 transition-transform">

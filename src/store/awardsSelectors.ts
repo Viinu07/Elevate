@@ -12,22 +12,22 @@ export const selectVoteCountsByAward = createSelector(
         const counts: Record<string, VoteCount[]> = {};
 
         votes.forEach(vote => {
-            if (!counts[vote.awardCategoryId]) {
-                counts[vote.awardCategoryId] = [];
+            if (!counts[vote.award_category_id]) {
+                counts[vote.award_category_id] = [];
             }
 
-            const existingCount = counts[vote.awardCategoryId]
+            const existingCount = counts[vote.award_category_id]
                 .find(c => c.nominee === vote.nominee);
 
             if (existingCount) {
                 existingCount.count++;
-                existingCount.voters.push(vote.nominator);
+                existingCount.voters.push(vote.nominator_id);
             } else {
-                counts[vote.awardCategoryId].push({
-                    awardCategoryId: vote.awardCategoryId,
+                counts[vote.award_category_id].push({
+                    awardCategoryId: vote.award_category_id,
                     nominee: vote.nominee,
                     count: 1,
-                    voters: [vote.nominator]
+                    voters: [vote.nominator_id]
                 });
             }
         });
@@ -69,14 +69,14 @@ export const selectTop3ByAward = createSelector(
 export const selectVotesByNominator = (nominator: string) =>
     createSelector(
         [(state: RootState) => state.collab.awards.votes],
-        (votes) => votes.filter(v => v.nominator === nominator)
+        (votes) => votes.filter(v => v.nominator_id === nominator)
     );
 
 /**
  * Selector: Get all votes cast by a specific voter (alias for selectVotesByNominator)
  */
 export const selectVotesByVoter = (state: RootState, voter: string) =>
-    state.collab.awards.votes.filter(v => v.nominator === voter);
+    state.collab.awards.votes.filter(v => v.nominator_id === voter);
 
 /**
  * Selector: Get all votes received by a specific nominee
@@ -93,7 +93,7 @@ export const selectVotesForNominee = (nominee: string) =>
 export const selectHasVotedInCategory = (nominator: string, categoryId: string) =>
     createSelector(
         [(state: RootState) => state.collab.awards.votes],
-        (votes) => votes.some(v => v.nominator === nominator && v.awardCategoryId === categoryId)
+        (votes) => votes.some(v => v.nominator_id === nominator && v.award_category_id === categoryId)
     );
 
 /**
@@ -109,7 +109,7 @@ export const selectTotalVotes = createSelector(
  */
 export const selectUniqueVotersCount = createSelector(
     [(state: RootState) => state.collab.awards.votes],
-    (votes) => new Set(votes.map(v => v.nominator)).size
+    (votes) => new Set(votes.map(v => v.nominator_id)).size
 );
 
 /**
@@ -122,13 +122,13 @@ export const selectVotingStats = createSelector(
     ],
     (votes, categories) => {
         const totalVotes = votes.length;
-        const uniqueVoters = new Set(votes.map(v => v.nominator)).size;
+        const uniqueVoters = new Set(votes.map(v => v.nominator_id)).size;
         const uniqueNominees = new Set(votes.map(v => v.nominee)).size;
 
         const votesByCategory = categories.map(cat => ({
             categoryId: cat.id,
             categoryName: cat.name,
-            voteCount: votes.filter(v => v.awardCategoryId === cat.id).length
+            voteCount: votes.filter(v => v.award_category_id === cat.id).length
         }));
 
         return {
