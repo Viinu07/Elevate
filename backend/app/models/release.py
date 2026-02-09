@@ -25,3 +25,7 @@ class ReleaseWorkItem(Base):
     warranty_call_needed: Mapped[bool] = mapped_column(Boolean, default=False)
     confluence_updated: Mapped[bool] = mapped_column(Boolean, default=False)
     csca_intake: Mapped[str] = mapped_column(String, default="No") # 'Yes' or 'No'
+    
+    # Status & Timeline
+    is_completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    release_date: Mapped[Optional[str]] = mapped_column(String, nullable=True)

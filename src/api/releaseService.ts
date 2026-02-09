@@ -27,6 +27,9 @@ export interface ReleaseWorkItem {
     warranty_call_needed: boolean;
     confluence_updated: boolean;
     csca_intake: string;
+
+    is_completed: boolean;
+    release_date: string | null;
 }
 
 // Type for creating a new item (ID is handled by backend or optional if we want to support optimistic UI)

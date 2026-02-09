@@ -6,3 +6,4 @@ from app.models.feedback import Feedback, AwardCategory, Vote
 from app.models.team_update import TeamUpdate
 from app.models.event import Event
 from app.models.voting_status import VotingStatus
+from app.models.release import ReleaseWorkItem

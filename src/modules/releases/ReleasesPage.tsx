@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { releaseService, type ReleaseWorkItem } from '../../api/releaseService';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { Check, Calendar, CheckCircle2 } from 'lucide-react';
 
 // --- Types ---
 interface TestingGate {
@@ -22,6 +22,9 @@ interface WorkItem {
     warrantyCallNeeded: boolean;
     confluenceUpdated: boolean;
     cscaIntake: 'Yes' | 'No';
+    // New Fields
+    isCompleted: boolean;
+    releaseDate: string;
 }
 
 // --- Data Mappers ---
@@ -37,7 +40,9 @@ const mapApiToUi = (item: ReleaseWorkItem): WorkItem => ({
     pvsIntakeNumber: item.pvs_intake_number || '',
     warrantyCallNeeded: item.warranty_call_needed,
     confluenceUpdated: item.confluence_updated,
-    cscaIntake: item.csca_intake as 'Yes' | 'No'
+    cscaIntake: item.csca_intake as 'Yes' | 'No',
+    isCompleted: item.is_completed,
+    releaseDate: item.release_date || ''
 });
 
 const mapUiToApi = (item: WorkItem): Omit<ReleaseWorkItem, 'id'> & { id?: number } => ({
@@ -55,7 +60,9 @@ const mapUiToApi = (item: WorkItem): Omit<ReleaseWorkItem, 'id'> & { id?: number
     pvs_intake_number: item.pvsIntakeNumber || null,
     warranty_call_needed: item.warrantyCallNeeded,
     confluence_updated: item.confluenceUpdated,
-    csca_intake: item.cscaIntake
+    csca_intake: item.cscaIntake,
+    is_completed: item.isCompleted,
+    release_date: item.releaseDate || null
 });
 
 // --- Mock Data Constants (Available for dropdowns) ---
@@ -79,7 +86,9 @@ export default function ReleasesPage() {
         pvsIntakeNumber: '',
         warrantyCallNeeded: false,
         confluenceUpdated: false,
-        cscaIntake: 'No'
+        cscaIntake: 'No',
+        isCompleted: false,
+        releaseDate: ''
     });
 
     useEffect(() => {
@@ -95,6 +104,23 @@ export default function ReleasesPage() {
             console.error('Failed to load releases:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleToggleCompletion = async (id: number, currentStatus: boolean) => {
+        try {
+            // Optimistic Update
+            setWorkItems(prev => prev.map(item =>
+                item.id === id ? { ...item, isCompleted: !currentStatus } : item
+            ));
+
+            await releaseService.update(id, { is_completed: !currentStatus });
+        } catch (error) {
+            console.error('Failed to update completion status:', error);
+            // Revert on error
+            setWorkItems(prev => prev.map(item =>
+                item.id === id ? { ...item, isCompleted: currentStatus } : item
+            ));
         }
     };
 
@@ -137,7 +163,9 @@ export default function ReleasesPage() {
                 pvsIntakeNumber: '',
                 warrantyCallNeeded: false,
                 confluenceUpdated: false,
-                cscaIntake: 'No'
+                cscaIntake: 'No',
+                isCompleted: false,
+                releaseDate: ''
             });
             setShowSuccessDialog(true);
         } catch (error) {
@@ -208,6 +236,20 @@ export default function ReleasesPage() {
                                 >
                                     {RELEASES.map(r => <option key={r} value={r}>{r}</option>)}
                                 </select>
+                            </div>
+
+                            {/* Release Date Input */}
+                            <div>
+                                <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Target Release Date</label>
+                                <div className="relative">
+                                    <input
+                                        type="date"
+                                        value={formData.releaseDate}
+                                        onChange={e => setFormData({ ...formData, releaseDate: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white pl-10"
+                                    />
+                                    <Calendar className="absolute left-3 top-3.5 text-slate-400 w-5 h-5" />
+                                </div>
                             </div>
                         </div>
 
@@ -346,18 +388,38 @@ export default function ReleasesPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {teamItems.map(item => (
-                                        <div key={item.id} className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-lg transition-all group">
-                                            <div className="flex justify-between items-start mb-4">
+                                        <div key={item.id} className={`bg-white dark:bg-slate-800 p-6 rounded-3xl border shadow-sm hover:shadow-lg transition-all group relative overflow-hidden ${item.isCompleted ? 'border-green-200 dark:border-green-900/30 opacity-75' : 'border-slate-100 dark:border-slate-700/50'}`}>
+
+                                            {/* Completion Checkmark */}
+                                            <button
+                                                onClick={() => handleToggleCompletion(item.id, item.isCompleted)}
+                                                className={`absolute top-6 right-6 p-2 rounded-full transition-all ${item.isCompleted ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-50 text-slate-300 dark:bg-slate-700/50 dark:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                                                title={item.isCompleted ? "Mark as Incomplete" : "Mark as Complete"}
+                                            >
+                                                <CheckCircle2 className="w-6 h-6" strokeWidth={item.isCompleted ? 3 : 2} />
+                                            </button>
+
+                                            <div className="flex justify-between items-start mb-4 pr-12">
                                                 <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${item.release.includes('beta') ? 'bg-amber-100 text-amber-700' :
                                                     item.release.includes('v3') ? 'bg-purple-100 text-purple-700' :
                                                         'bg-emerald-100 text-emerald-700'
                                                     }`}>
                                                     {item.release}
                                                 </span>
-                                                {item.pvsTesting && <span className="text-[10px] font-mono text-slate-400 border border-slate-100 dark:border-slate-700 px-2 py-1 rounded-md">{item.pvsIntakeNumber}</span>}
                                             </div>
 
-                                            <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-6 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{item.title}</h3>
+                                            <h3 className={`font-bold text-lg mb-2 transition-colors ${item.isCompleted ? 'text-slate-500 line-through decoration-slate-300' : 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
+                                                {item.title}
+                                            </h3>
+
+                                            {/* Logic for Release Date Display */}
+                                            {item.releaseDate && (
+                                                <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mb-6">
+                                                    <Calendar className="w-3.5 h-3.5" />
+                                                    <span>Target: {item.releaseDate}</span>
+                                                </div>
+                                            )}
+                                            {!item.releaseDate && <div className="mb-6 h-4"></div>}
 
                                             <div className="space-y-3 mb-6">
                                                 <GateStatus label="Unit" gate={item.unitTesting} />
@@ -366,6 +428,7 @@ export default function ReleasesPage() {
                                             </div>
 
                                             <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                                                {item.pvsTesting && <span className="text-[10px] font-mono text-slate-400 border border-slate-100 dark:border-slate-700 px-2 py-1 rounded-md">PVS: {item.pvsIntakeNumber}</span>}
                                                 {item.warrantyCallNeeded && <span className="text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-2 py-1 rounded font-bold border border-amber-100 dark:border-amber-900/30">Warranty</span>}
                                                 {item.confluenceUpdated && <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded font-bold border border-blue-100 dark:border-blue-900/30">Docs Updated</span>}
                                                 <span className={`text-[10px] px-2 py-1 rounded font-bold border ${item.cscaIntake === 'Yes' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>CSCA: {item.cscaIntake}</span>
