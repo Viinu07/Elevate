@@ -31,8 +31,28 @@ class ReleaseWorkItemBase(BaseModel):
 class ReleaseWorkItemCreate(ReleaseWorkItemBase):
     id: int # Accepting ID from frontend to match Date.now() logic if desired, or we can make it optional
 
-class ReleaseWorkItemUpdate(ReleaseWorkItemBase):
-    pass
+class ReleaseWorkItemUpdate(BaseModel):
+    title: Optional[str] = None
+    team_name: Optional[str] = None
+    release_version: Optional[str] = None
+    
+    unit_testing_checked: Optional[bool] = None
+    unit_testing_date: Optional[str] = None
+    
+    system_testing_checked: Optional[bool] = None
+    system_testing_date: Optional[str] = None
+    
+    int_testing_checked: Optional[bool] = None
+    int_testing_date: Optional[str] = None
+    
+    pvs_testing: Optional[bool] = None
+    pvs_intake_number: Optional[str] = None
+    warranty_call_needed: Optional[bool] = None
+    confluence_updated: Optional[bool] = None
+    csca_intake: Optional[str] = None
+    
+    is_completed: Optional[bool] = None
+    release_date: Optional[str] = None
 
 class ReleaseWorkItem(ReleaseWorkItemBase):
     id: int

@@ -400,26 +400,26 @@ export default function ReleasesPage() {
                                             </button>
 
                                             <div className="flex justify-between items-start mb-4 pr-12">
-                                                <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${item.release.includes('beta') ? 'bg-amber-100 text-amber-700' :
-                                                    item.release.includes('v3') ? 'bg-purple-100 text-purple-700' :
-                                                        'bg-emerald-100 text-emerald-700'
-                                                    }`}>
-                                                    {item.release}
-                                                </span>
+                                                <div className="flex flex-col gap-2">
+                                                    <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider w-fit ${item.release.includes('beta') ? 'bg-amber-100 text-amber-700' :
+                                                        item.release.includes('v3') ? 'bg-purple-100 text-purple-700' :
+                                                            'bg-emerald-100 text-emerald-700'
+                                                        }`}>
+                                                        {item.release}
+                                                    </span>
+                                                    {/* Prominent Release Date */}
+                                                    {item.releaseDate && (
+                                                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-700/50 px-2.5 py-1 rounded-md w-fit">
+                                                            <Calendar className="w-3.5 h-3.5" />
+                                                            <span className="text-xs">Target: {item.releaseDate}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            <h3 className={`font-bold text-lg mb-2 transition-colors ${item.isCompleted ? 'text-slate-500 line-through decoration-slate-300' : 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
+                                            <h3 className={`font-bold text-lg mb-6 transition-colors ${item.isCompleted ? 'text-slate-500 line-through decoration-slate-300' : 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
                                                 {item.title}
                                             </h3>
-
-                                            {/* Logic for Release Date Display */}
-                                            {item.releaseDate && (
-                                                <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mb-6">
-                                                    <Calendar className="w-3.5 h-3.5" />
-                                                    <span>Target: {item.releaseDate}</span>
-                                                </div>
-                                            )}
-                                            {!item.releaseDate && <div className="mb-6 h-4"></div>}
 
                                             <div className="space-y-3 mb-6">
                                                 <GateStatus label="Unit" gate={item.unitTesting} />
